@@ -10,7 +10,7 @@ v5.0.0 (2024-12-19)
 By Barak Shoshany <baraksh@gmail.com> <https://baraksh.com/>
 Copyright (c) 2024 Barak Shoshany. Licensed under the MIT license. If you found this project useful, please consider starring it on GitHub! If you use this library in software of any kind, please provide a link to the GitHub repository https://github.com/bshoshany/thread-pool in the source code and documentation. If you use this library in published research, please cite it as follows: Barak Shoshany, "A C++17 Thread Pool for High-Performance Scientific Computing", doi:10.1016/j.softx.2024.101687, SoftwareX 26 (2024) 101687, arXiv:2105.00613
 
-This Python script can be used to compile simple C++ programs (with only a few source and/or header files) using a variety of compilers, C++ standards, and other options. It also includes support for C++20 modules and C++23 Standard Library modules. It is used in the thread pool library's development environment to compile and run the test program using different compilers and C++ standards. It is not part of the library itself, but users of the library may find it useful, especially if they wish to use the library as a C++20 module.
+This Python script can be used to compile simple C++ programs (with only a few source and/or header files) using a variety of compilers, C++ standards, and other options. It also includes support for C++20 modules_cpp20 and C++23 Standard Library modules_cpp20. It is used in the thread pool library's development environment to compile and run the test program using different compilers and C++ standards. It is not part of the library itself, but users of the library may find it useful, especially if they wish to use the library as a C++20 module.
 """
 
 import argparse
@@ -125,8 +125,8 @@ if not args.ignore_yaml and compile_yaml.exists():
             flags.extend(compile_config["flags"][compiler])
         if "includes" in compile_config:
             includes.extend(compile_config["includes"])
-        if "modules" in compile_config:
-            modules.update(compile_config["modules"])
+        if "modules_cpp20" in compile_config:
+            modules.update(compile_config["modules_cpp20"])
         if output is None and "output" in compile_config:
             output = compile_config["output"]
         if "pass_args" in compile_config:
@@ -214,7 +214,7 @@ if executable_path is None:
 if not pathlib.Path(build_folder).exists():
     pathlib.Path(build_folder).mkdir()
 
-# If modules are specified, pre-compile them by calling this script recursively, unless the current file is itself a module. As a special case, if the std module is used, we add it even if the current file is a module, in case the module itself wants to import the std module.
+# If modules_cpp20 are specified, pre-compile them by calling this script recursively, unless the current file is itself a module. As a special case, if the std module is used, we add it even if the current file is a module, in case the module itself wants to import the std module.
 module_paths: dict[str, list[pathlib.Path]] = {}
 if not args.as_module:
     module_paths = {name: [(pathlib.Path.cwd() / file).resolve() for file in files] for name, files in modules.items()}
@@ -286,7 +286,7 @@ if len(modules) > 0 and (args.std in ["c++20", "c++23"]):
 # Collect the full paths to the include folders, relative to the current working directory.
 include_paths: list[pathlib.Path] = [(pathlib.Path.cwd() / folder).resolve() for folder in includes]
 
-# On macOS, make sure we are using Homebrew Clang, if available, instead of Apple Clang, which does not support C++20 modules.
+# On macOS, make sure we are using Homebrew Clang, if available, instead of Apple Clang, which does not support C++20 modules_cpp20.
 compiler_path: str | None
 if compiler == "clang++" and platform.system() == "Darwin":
     compiler_path = "/usr/local/opt/llvm/bin/clang++"
@@ -313,7 +313,7 @@ if compiler == "clang++":
 elif compiler == "g++":
     if len(modules) > 0 and (args.std in ["c++20", "c++23"]):
         print_if_verbose(
-            "NOTE: GCC v14.2.0 appears to have an internal compiler error when compiling programs containing modules with any optimization flags other than -Og enabled. Until this is fixed, if you wish to use compiler optimizations, please either include the library as a header file or use a different compiler.",
+            "NOTE: GCC v14.2.0 appears to have an internal compiler error when compiling programs containing modules_cpp20 with any optimization flags other than -Og enabled. Until this is fixed, if you wish to use compiler optimizations, please either include the library as a header file or use a different compiler.",
         )
     command = [
         compiler_path if compiler_path is not None else compiler,

@@ -13,7 +13,7 @@
  *
  * @brief `BS::thread_pool`: a fast, lightweight, modern, and easy-to-use C++17/C++20/C++23 thread pool library. This program tests all aspects of the library, but is not needed in order to use the library.
  */
-
+#include "arg_parser.h"
 // We need to include <version> since if we're using `import std` it will not define any feature-test macros, including `__cpp_lib_modules`, which we need to check if `import std` is supported in the first place.
 #ifdef __has_include
     #if __has_include(<version>)
@@ -69,14 +69,14 @@ constexpr bool using_import_std = true;
 constexpr bool using_import_std = false;
 #endif
 
-// If the macro `BS_THREAD_POOL_TEST_IMPORT_MODULE` is defined, import the thread pool library as a module. Otherwise, include the header file. We also check that we are in C++20 or later. We can't use `__cpp_modules` to check if modules are supported, because Clang does not define it even in C++20 mode; its support for C++20 modules is only partial, but it does seem to work for this particular library.
+// If the macro `BS_THREAD_POOL_TEST_IMPORT_MODULE` is defined, import the thread pool library as a module. Otherwise, include the header file. We also check that we are in C++20 or later. We can't use `__cpp_modules` to check if modules_cpp20 are supported, because Clang does not define it even in C++20 mode; its support for C++20 modules_cpp20 is only partial, but it does seem to work for this particular library.
 #define BS_THREAD_POOL_TEST_VERSION 5, 0, 0
 #if defined(BS_THREAD_POOL_TEST_IMPORT_MODULE) && (__cplusplus >= 202002L)
 import BS.thread_pool;
 static_assert(BS::thread_pool_module, "The flag BS::thread_pool_module is set to false, but the library was imported as a module. Aborting compilation.");
 static_assert(BS::thread_pool_version == BS::version(BS_THREAD_POOL_TEST_VERSION), "The versions of BS_thread_pool_test.cpp and the BS.thread_pool module do not match. Aborting compilation.");
 #else
-    #include "BS_thread_pool.hpp"
+    #include "../src/BS_thread_pool.hpp"
 static_assert(!BS::thread_pool_module, "The flag BS::thread_pool_module is set to true, but the library was not imported as a module. Aborting compilation.");
 static_assert(BS::thread_pool_version == BS::version(BS_THREAD_POOL_TEST_VERSION), "The versions of BS_thread_pool_test.cpp and BS_thread_pool.hpp do not match. Aborting compilation.");
 #endif
@@ -84,9 +84,9 @@ static_assert(BS::thread_pool_version == BS::version(BS_THREAD_POOL_TEST_VERSION
 #ifdef BS_THREAD_POOL_NATIVE_EXTENSIONS
 static_assert(BS::thread_pool_native_extensions, "Cannot test the native extensions, as the thread pool module was compiled without enabling them using the macro BS_THREAD_POOL_NATIVE_EXTENSIONS. Aborting compilation.");
 #endif
-
+#include "synced_stream.h"
 // A global synced stream which prints to the standard output and/or the log file.
-BS::synced_stream sync_out;
+
 
 // ======================
 // Functions for printing
@@ -1933,7 +1933,6 @@ void check_vectors()
 // =================================
 
 // Priorities are 8-bit integers, but `std::uniform_int_distribution` needs at least a 16-bit integer.
-using rand_priority_t = std::int16_t;
 
 /**
  * @brief Check that task priority works as expected with all task submission methods.
@@ -3326,7 +3325,7 @@ void show_intro()
     sync_out.println();
 
     sync_out.println("Thread pool library version is v", BS::thread_pool_version, '.');
-    sync_out.println("Thread pool library imported using: ", BS::thread_pool_module ? "import BS.thread_pool (" : "#include \"BS_thread_pool.hpp\" (no ", "C++20 modules).");
+    sync_out.println("Thread pool library imported using: ", BS::thread_pool_module ? "import BS.thread_pool (" : "#include \"BS_thread_pool.hpp\" (no ", "C++20 modules_cpp20).");
     sync_out.println();
     sync_out.println("C++ Standard Library imported using:");
     sync_out.println("* Thread pool library: ", BS::thread_pool_import_std ? "import std (" : "#include <...> (no ", "C++23 std module).");
@@ -3380,118 +3379,6 @@ std::string get_time()
 #endif
 }
 
-/**
- * @brief A class to parse command line arguments. All arguments are assumed to be on/off and default to off.
- */
-class [[nodiscard]] arg_parser
-{
-public:
-    /**
-     * @brief Convert the command line arguments passed to the `main()` function into an `std::vector`.
-     *
-     * @param argc The number of arguments.
-     * @param argv An array containing the arguments.
-     */
-    arg_parser(int argc, char* argv[]) : args(argv + 1, argv + argc), executable(argv[0]) {};
-
-    /**
-     * @brief Check if a specific command line argument has been passed to the program. If no arguments were passed, use the default value instead.
-     *
-     * @param arg The argument to check for.
-     * @return `true` if the argument exists, `false` otherwise.
-     */
-    [[nodiscard]] bool operator[](const std::string_view arg)
-    {
-        if (size() > 0)
-            return (args.count(arg) == 1);
-        return allowed[arg].def;
-    }
-
-    /**
-     * @brief Add an argument to the list of allowed arguments.
-     *
-     * @param arg The argument.
-     * @param desc The description of the argument.
-     * @param def The default value of the argument.
-     */
-    void add_argument(const std::string_view arg, const std::string_view desc, const bool def)
-    {
-        allowed[arg] = {desc, def};
-    }
-
-    /**
-     * @brief Get the name of the executable.
-     *
-     * @return The name of the executable.
-     */
-    std::string_view get_executable()
-    {
-        return executable;
-    }
-
-    void show_help() const
-    {
-        int width = 1;
-        for (const auto& [arg, opt] : allowed)
-            width = std::max(width, static_cast<int>(arg.size()));
-        sync_out.println("\nAvailable options (all are on/off and default to off):");
-        for (const auto& [arg, opt] : allowed)
-            sync_out.println("  ", std::left, std::setw(width), arg, "  ", opt.desc);
-        sync_out.print("If no options are entered, the default is:\n  ");
-        for (const auto& [arg, opt] : allowed)
-        {
-            if (opt.def)
-                sync_out.print(arg, " ");
-        }
-        sync_out.println();
-    }
-
-    /**
-     * @brief Get the number of command line arguments.
-     *
-     * @return The number of arguments.
-     */
-    [[nodiscard]] std::size_t size() const
-    {
-        return args.size();
-    }
-
-    /**
-     * @brief Verify that the command line arguments belong to the list of allowed arguments.
-     *
-     * @return `true` if all arguments are allowed, `false` otherwise.
-     */
-    [[nodiscard]] bool verify() const
-    {
-        return std::all_of(args.begin(), args.end(),
-            [this](const std::string_view arg)
-            {
-                return allowed.count(arg) == 1;
-            });
-    }
-
-private:
-    struct arg_spec
-    {
-        std::string_view desc;
-        bool def = false;
-    };
-
-    /**
-     * @brief A set containing string views of the command line arguments.
-     */
-    std::set<std::string_view> args;
-
-    /**
-     * @brief A map containing the allowed arguments and their descriptions.
-     */
-    std::map<std::string_view, arg_spec> allowed;
-
-    /**
-     * @brief A string view containing the name of the executable.
-     */
-    std::string_view executable;
-}; // class arg_parser
 
 int main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 {

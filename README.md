@@ -2528,7 +2528,7 @@ Note: The following instructions have only been tested using Clang v19.1.6, the 
 To compile the module file `BS.thread_pool.cppm` with Clang, first create the `build` folder using `mkdir build`, and then run the following command in the root folder of the repository:
 
 ```bash
-clang++ modules/BS.thread_pool.cppm --precompile -std=c++20 -I include -o build/BS.thread_pool.pcm
+clang++ modules_cpp20/BS.thread_pool.cppm --precompile -std=c++20 -I include -o build/BS.thread_pool.pcm
 ```
 
 Here is a breakdown of the compiler arguments:
@@ -2572,7 +2572,7 @@ Note: The following instructions have only been tested using GCC v14.2.0, the la
 To compile the module file `BS.thread_pool.cppm` with GCC, first create the `build` folder using `mkdir build`, and then run the following command in the root folder of the repository:
 
 ```bash
-g++ -x c++ modules/BS.thread_pool.cppm -c "-fmodule-mapper=|@g++-mapper-server -r build" -fmodule-only -fmodules-ts -std=c++20 -I include
+g++ -x c++ modules_cpp20/BS.thread_pool.cppm -c "-fmodule-mapper=|@g++-mapper-server -r build" -fmodule-only -fmodules-ts -std=c++20 -I include
 ```
 
 Here is a breakdown of the compiler arguments:
@@ -2684,12 +2684,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(MSVC)
-    add_compile_options(/permissive- /Zc:__cplusplus)
-endif()
+if (MSVC)
+  add_compile_options(/permissive- /Zc:__cplusplus)
+endif ()
 
 add_library(BS_thread_pool)
-target_sources(BS_thread_pool PRIVATE FILE_SET CXX_MODULES FILES modules/BS.thread_pool.cppm)
+target_sources(BS_thread_pool PRIVATE FILE_SET CXX_MODULES FILES modules_cpp20/BS.thread_pool.cppm)
 target_include_directories(BS_thread_pool PRIVATE include)
 
 add_executable(${PROJECT_NAME} tests/BS_thread_pool_test.cpp)
@@ -2790,7 +2790,7 @@ Next, compile the `BS.thread_pool` module as [above](#compiling-with-clang-using
 * `-D BS_THREAD_POOL_IMPORT_STD`: Instruct the library to import the `std` module.
 
 ```bash
-clang++ modules/BS.thread_pool.cppm --precompile -fmodule-file="std=build/std.pcm" -std=c++23 -I include -o build/BS.thread_pool.pcm -D BS_THREAD_POOL_IMPORT_STD
+clang++ modules_cpp20/BS.thread_pool.cppm --precompile -fmodule-file="std=build/std.pcm" -std=c++23 -I include -o build/BS.thread_pool.pcm -D BS_THREAD_POOL_IMPORT_STD
 ```
 
 Add `-D BS_THREAD_POOL_NATIVE_EXTENSIONS` if you wish to enable the [native extensions](#native-extensions). Once the module is compiled, you can compile the test program as follows:
@@ -2860,12 +2860,12 @@ set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD ON)
 
 add_compile_definitions(BS_THREAD_POOL_IMPORT_STD)
 
-if(MSVC)
-    add_compile_options(/permissive- /Zc:__cplusplus)
-endif()
+if (MSVC)
+  add_compile_options(/permissive- /Zc:__cplusplus)
+endif ()
 
 add_library(BS_thread_pool)
-target_sources(BS_thread_pool PRIVATE FILE_SET CXX_MODULES FILES modules/BS.thread_pool.cppm)
+target_sources(BS_thread_pool PRIVATE FILE_SET CXX_MODULES FILES modules_cpp20/BS.thread_pool.cppm)
 target_include_directories(BS_thread_pool PRIVATE include)
 
 add_executable(${PROJECT_NAME} tests/BS_thread_pool_test.cpp)
